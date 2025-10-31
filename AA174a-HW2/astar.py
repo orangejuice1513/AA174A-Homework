@@ -40,8 +40,9 @@ class AStar(object):
               useful here
         """
         ########## Code starts here ##########
-        if (self.occupancy).is_free and x >= self.statespace_lo and x <= self.statespace_hi:
-            return True 
+        if (self.occupancy).is_free(x) and x[0] >= self.statespace_lo[0] and x[0] <= self.statespace_hi[0]:
+            if x[1]  >= self.statespace_lo[1] and x[1] <= self.statespace_hi[1]:
+                return True 
         return False 
         ########## Code ends here ##########
 
@@ -95,9 +96,10 @@ class AStar(object):
         ########## Code starts here ##########
         for i in range(-1, 2): # iterates over -1, 0, 1
             for j in range(-1, 2):
-                neighbor = (x[0] + i, x[1] + j)
+                neighbor = (x[0] + i*self.resolution, x[1] + j*self.resolution)
                 if i == 0 and j == 0: continue # don't care if we are on the current x 
                 if self.is_free(neighbor):
+                    neighbor = self.snap_to_grid(neighbor)
                     neighbors.append(neighbor)
         ########## Code ends here ##########
         return neighbors
@@ -172,14 +174,14 @@ class AStar(object):
         while len(self.open_set) > 0: 
             x_cur = self.find_best_est_cost_through()
             if x_cur == self.x_goal: 
-                self.reconstruct_path #goal is reached 
+                self.path = self.reconstruct_path() #goal is reached 
                 return True 
             self.open_set.remove(x_cur)
             self.closed_set.add(x_cur)
             for neighbor in self.get_neighbors(x_cur): # explore all the neighbors
                 if neighbor in self.closed_set:
                     continue # skip neighbors that have been explored 
-                tentative_cost_to_arrive = self.cost_to_arrive[x_cur] + self.distance(x_cur, self.x_goal)
+                tentative_cost_to_arrive = self.cost_to_arrive[x_cur] + self.distance(x_cur, neighbor) #to the neighbor 
                 if neighbor not in self.open_set:
                     self.open_set.add(neighbor) 
                 elif tentative_cost_to_arrive > self.cost_to_arrive[neighbor]:
